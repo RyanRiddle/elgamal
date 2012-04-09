@@ -53,8 +53,37 @@ def jacobi( a, n ):
 		z = 'fail'
 		print z
 	return z
+
+def find_primitive_root( p ):
+	if p == 2:
+		return 1
+	p1 = 2
+	p2 = p / p1
+	
+	while( 1 ):
+		g = random.randint( 2, p-1 )
+		if not modexp( g, (p-1)/p1, p ) == 1:
+			if not modexp( g, (p-1)/p2, p ) == 1:
+				return g
+	
+def find_prime( n ):
+	while(1):
+		p = random.randint( 2, n )
+		while( p % 2 == 0 ):
+			p = random.randint(2,n)
+
+		while( not SS(p) ):
+			p = random.randint( 2, n )
+			while( p % 2 == 0 ):
+				p = random.randint(2,n)
+
+		p = p * 2 + 1
+		if SS(p):
+			return p
 	
 
 
-print SS( 101 )
+p = find_prime( 101 )
+g = find_primitive_root( p )
+print '( p = ' + str(p) + ', g = ' + str(g) + ' )'
 
