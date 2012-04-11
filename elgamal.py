@@ -1,4 +1,5 @@
 import random
+import math
 
 def gcd( a, b ):
 	if b != 0:
@@ -100,9 +101,15 @@ def encode( file_name ):
 			exp += 1
 		m.append( num )
 
-	z = 0
+
+	z = [math.ceil( len(m) /63 )]
+	j = -63
+	num = 0
 	for i in range( len(m) ):
-		z += m[i]*(2**(8*i))
+		if i % 63 == 0:
+			j += 63
+			num = 0
+		z[j/63] += m[i]*(2**(8*(i%63)))
 
 
 	return z
@@ -111,7 +118,9 @@ def encode( file_name ):
 #p = find_prime( 101 )
 #g = find_primitive_root( p )
 #print '( p = ' + str(p) + ', g = ' + str(g) + ' )'
-print encode( 'bytes.txt' )
+z = encode( 'bytes.txt' )
+for i in z:
+	print i
 
 
 
