@@ -222,7 +222,7 @@ def find_prime(iNumBits, iConfidence):
         
 #encodes bytes to integers mod p.  reads bytes from file
 def encode(sPlaintext, iNumBits):
-        byte_array = [ord(ch) for ch in sPlaintext]
+        byte_array = bytearray(sPlaintext, 'utf-16')
 
         #z is the array of integers mod p
         z = []
@@ -297,14 +297,10 @@ def decode(aiPlaintext, iNumBits):
         #7696128 - (111 * (2^(8*1))) = 7667712
         #m[2] = 7667712 / (2^(8*2)) = 117 = 'u'
                         
-        decodedText = ""
-	#i is a message byte
-        for i in bytes_array:
-                decodedText += chr(i)
+        decodedText = bytearray(b for b in bytes_array).decode('utf-16')
 
         return decodedText
                                 
-
 #generates public key K1 (p, g, h) and private key K2 (p, g, x)
 def generate_keys(iNumBits=256, iConfidence=32):
         #p is the prime
@@ -374,3 +370,12 @@ def decrypt(key, cipher):
 
         return decryptedText
 
+def test():
+        keys = generate_keys()
+        priv = keys['privateKey']
+        pub = keys['publicKey']
+        message = "My name is Ryan.  Here is some french text:  Maître Corbeau, sur un arbre perché.  Now some Chinese: 鋈 晛桼桾 枲柊氠 藶藽 歾炂盵 犈犆犅 壾, 軹軦軵 寁崏庲 摮 蟼襛 蝩覤 蜭蜸覟 駽髾髽 忷扴汥 "
+        cipher = encrypt(pub, message)
+        plain = decrypt(priv, cipher)
+
+        return message == plain
