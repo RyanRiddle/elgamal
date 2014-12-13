@@ -8,7 +8,7 @@ This program was created as an exercise in cryptography in one of my classes at 
 I later turned it into a module.  I do not recommend you use it to protect any sensitive information.
 
 Using elgamal:
-Install elgamal by download elgamal.py and placing it in your module search path.
+Install elgamal by downloading elgamal.py and placing it in your module search path.
 
 If you don't know your module search path, fire up a python console and run
 
