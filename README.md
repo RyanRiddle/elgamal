@@ -1,26 +1,42 @@
 elgamal
 =======
 
-Overview: Python implementation of the El Gamal crypto system.  Encrypts a given message and then decrypts it.
-Works with Python 3.2.3.  It may work with other versions too, but I have not tested it.
+Overview: elgamal is a python module that lets you encrypt and decrypt text using the ElGamal Cryptosystem.
 
 Intended Use:
 This program was created as an exercise in cryptography in one of my classes at the University of Kentucky.
-It demonstrates the El Gamal Cryptosystem.  I do not recommend you use it to protect any sensitive information.
+I later turned it into a module.  I do not recommend you use it to protect any sensitive information.
 
-Instructions for Use:
-Create a text file with the message you want to encrypt/decrypt.  You will be asked for the file name at runtime.
-Run elgamal.py.  It will ask you to enter a key length.  Enter the number of bits you want to use for the key.  
-Then it will ask you for a confidence level t.  Enter a number here.  The confidence level means that the numbers
-the algorithm uses are 1-(2^-t) percent certain to be primes.  If you enter 250 for the number of bits and 32 for
-t, the keys will be generated very quickly.  If you enter 500 for the number of bits and 32 for t, it will take about
-3 minutes (on my machine) to generate the keys.  You can enter whatever numbers you like; those are just some benchmakrs.
+Using elgamal:
+Install elgamal by download elgamal.py and placing it in your module search path.
 
-Finally, it will ask you for the name of the file that contains the information you want to encrypt.  Enter the file name.
-It will generate two key files K1 and K2 used for encrypting and decrypting the message.  Upon completing encryption,
-it will create a file called "Cipher", containing the cipher-text.  Upon completing decryption, it will create a file
-called "Plaintext", containing the plain-text.  
+If you don't know your module search path, fire up a python console and run
 
-When I ran the program I encrypted/decrypted the following text.
-"You can trust some of the people all of the time.  You can trust all the people some of the time.  But you can't trust
-all of the people all of the time."
+	import sys
+	sys.path
+
+To use do
+
+	import elgamal
+
+The three functions you need to use elgamal are
+	1) elgamal.generate_keys()
+	2) elgamal.encrypt()
+	3) elgamal.decrypt()
+
+elgamal.generate_keys() returns a dictionary containing a public key and a private key.
+By default generate_keys() generates keys using 256 bit primes with a certainty level of 32.
+Certainity level 32 means the probability that there is a 1-(2^-32) chance that the primes
+are actually prime.  You can adjust these values.  For example, elgamal.generate_keys(1024, 10)
+would generate keys using 1024 bit primes with 1-(2^-10) probability that they are primes.
+
+Warning: generating large primes is slow.  On my machine it took ~3 minutes to generate a 512 bit prime.
+
+elgamal.encrypt() takes two arguments, the public key and a text string.  It returns cipher text.
+
+elgamal.decrypt() takes two arguments, the private key and the cipher text.  It returns the plaintext.
+
+Compatibility: Python 3.4
+
+Issues:  It seems that encrypting strings with more than 32 characters is not working.  It was working
+before i converted this project to a library, so I'm sure it's a small mistake that I can fix quickly.
