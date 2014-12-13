@@ -341,7 +341,7 @@ def encrypt(key, sPlaintext):
 
         encryptedStr = ""
         for pair in cipher_pairs:
-                encryptedStr += str(pair[0]) + ' ' + str(pair[1])
+                encryptedStr += str(pair[0]) + ' ' + str(pair[1]) + ' '
 	
         return encryptedStr;
 
