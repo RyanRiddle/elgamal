@@ -24,6 +24,15 @@ To generate a public/private key pair do
 	elgamal.generate_keys()
 	#returns a dictionary {'privateKey': privateKeyObject, 'publicKey': publicKeyObject}
 	
+By default generate_keys() generates a key of 256 bits with probability 0.9999999997671694
+(1-(2^-32)) that your key is prime.  You can alter the bitness of your keys and the certainty
+that your key is prime by passing arguments n and t like this.
+
+	elgamal.generate_keys(n, t)
+	
+where n is the number of bits you want your key to have and t means the probability that the
+key is prime is 1-(2^-t).
+	
 To encrypt a message do
 
 	cipher = elgamal.encrypt(publicKey, "This is the message I want to encrypt")
