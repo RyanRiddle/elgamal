@@ -14,7 +14,7 @@
 #After the user has provided the necessary information the program will generate a pair
 #of keys (K1, K2) used for encryption and decryption.  K1 is the public key and contains
 #three integers (p, g, h).
-#       p is an n bit prime.  The probability that p is actually prime is 2^-t
+#       p is an n bit prime.  The probability that p is actually prime is 1-(2^-t)
 #       g is a primitive root mod p
 #       h = g^x mod p; x is randomly chosen, 1 <= x < p
 #h is computed using fast modular exponentiation, implemented as modexp( base, exp, modulus )
@@ -80,13 +80,19 @@
 import random
 import math
 
-#globals
-#n-number of bits in prime
-#t-confidence p is prime
-#message_file - name of file containing message to encrypt and decrypt
-n = 0
-t = 0
-message_file = ""
+class PrivateKey(object):
+	def __init__(self, p=None, g=None, x=None, iNumBits=0):
+		self.p = p
+		self.g = g
+		self.x = x
+		self.iNumBits = iNumBits
+
+class PublicKey(object):
+	def __init__(self, p=None, g=None, h=None, iNumBits=0):
+		self.p = p
+		self.g = g
+		self.h = h
+		self.iNumBits = iNumBits
 
 # computes the greatest common denominator of a and b.  assumes a > b
 def gcd( a, b ):
@@ -118,9 +124,9 @@ def modexp( base, exp, modulus ):
                 return base*z*z % modulus
 
 #solovay-strassen primality test.  tests if num is prime
-def SS( num ):
+def SS( num, iConfidence ):
         #ensure confidence of t
-        for i in range(t):
+        for i in range(iConfidence):
                 #choose random a between 1 and n-2
                 a = random.randint( 1, num-1 )
                 
@@ -193,42 +199,30 @@ def find_primitive_root( p ):
                                 return g
 
 #find n bit prime
-def find_prime():
+def find_prime(iNumBits, iConfidence):
         #keep testing until one is found
         while(1):
                 #generate potential prime randomly
-                p = random.randint( 2**(n-2), 2**(n-1) )
+                p = random.randint( 2**(iNumBits-2), 2**(iNumBits-1) )
                 #make sure it is odd
                 while( p % 2 == 0 ):
-                        p = random.randint(2**(n-2),2**(n-1))
+                        p = random.randint(2**(iNumBits-2),2**(iNumBits-1))
 
                 #keep doing this if the solovay-strassen test fails
-                while( not SS(p) ):
-                        p = random.randint( 2**(n-2), 2**(n-1) )
+                while( not SS(p, iConfidence) ):
+                        p = random.randint( 2**(iNumBits-2), 2**(iNumBits-1) )
                         while( p % 2 == 0 ):
-                                p = random.randint(2**(n-2), 2**(n-1))
+                                p = random.randint(2**(iNumBits-2), 2**(iNumBits-1))
 
                 #if p is prime compute p = 2*p + 1
                 #if p is prime, we have succeeded; else, start over
                 p = p * 2 + 1
-                if SS(p):
+                if SS(p, iConfidence):
                         return p
         
 #encodes bytes to integers mod p.  reads bytes from file
-def encode():
-        f = open( message_file, 'r' )
-        #convert to the ascii integer value of the character
-        data = ord(f.read(1))
-        byte_array = []
-        #put data into an array.  each element is a byte
-        while( data ):
-                byte_array.append( data )
-                data = f.read(1)
-                #add data to byte array until an empty string is read (EOF)
-                if data == '':
-                        break
-                data = ord(data)                
-        f.close()
+def encode(sPlaintext, iNumBits):
+        byte_array = [ord(ch) for ch in sPlaintext]
 
         #z is the array of integers mod p
         z = []
@@ -236,7 +230,7 @@ def encode():
         #each encoded integer will be a linear combination of k message bytes
         #k must be the number of bits in the prime divided by 8 because each
         #message byte is 8 bits long
-        k = n//8
+        k = iNumBits//8
 
         #j marks the jth encoded integer
         #j will start at 0 but make it -k because j will be incremented during first iteration 
@@ -262,23 +256,7 @@ def encode():
         return z
 
 #decodes integers to the original message bytes
-def decode():
-        #get encoded integers from file
-        f = open( 'Plaintext', 'r' )
-        data = f.readline()
-        #will contain the integers in the file
-        z = []
-        #while data is read
-        while( data ):
-                #if not empty string (EOF), convert the line to an integer, add it to z
-                if not data == '':
-                        data = int(data)
-                        z.append(data)
-                #read another line
-                data = f.readline()
-        f.close()
-
-        #decode
+def decode(aiPlaintext, iNumBits):
         #bytes array will hold the decoded original message bytes
         bytes_array = []
 
@@ -286,10 +264,10 @@ def decode():
         #each encoded integer is a linear combination of k message bytes
         #k must be the number of bits in the prime divided by 8 because each
         #message byte is 8 bits long
-        k = n//8
+        k = iNumBits//8
 
-        #num is an integer in list z
-        for num in z:
+        #num is an integer in list aiPlaintext
+        for num in aiPlaintext:
                 #get the k message bytes from the integer, i counts from 0 to k-1
                 for i in range(k):
                         #temporary integer
@@ -319,152 +297,80 @@ def decode():
         #7696128 - (111 * (2^(8*1))) = 7667712
         #m[2] = 7667712 / (2^(8*2)) = 117 = 'u'
                         
-        #write each message byte as a character to file Plaintext
-        f = open( 'Plaintext', 'w' )
-        #i is a message byte
+        decodedText = ""
+	#i is a message byte
         for i in bytes_array:
-                f.write( chr(i) )
-        f.close()
+                decodedText += chr(i)
+
+        return decodedText
                                 
 
 #generates public key K1 (p, g, h) and private key K2 (p, g, x)
-#writes K1 to file 'K1' and K2 to file 'K2'
-def generate_keys():
+def generate_keys(iNumBits=256, iConfidence=32):
         #p is the prime
         #g is the primitve root
         #x is random in (0, p-1) inclusive
         #h = g ^ x mod p
-        p = find_prime()
+        p = find_prime(iNumBits, iConfidence)
         g = find_primitive_root( p )
         x = random.randint( 1, p )
         h = modexp( g, x, p )
 
-        keys = [[p, g, h], [p, g, x]]
-        f = open( 'K1', 'w' )
-        for i in keys[0]:
-                f.write( str(i) + "\n" )
-        f.close
-        f = open( 'K2', 'w' )
-        for i in keys[1]:
-                f.write( str(i) + "\n" )
-        f.close()
+        publicKey = PublicKey(p, g, h, iNumBits)
+        privateKey = PrivateKey(p, g, x, iNumBits)
 
-
-#sets the globals n, t, and message file from user input
-def get_global_params():
-        global n
-        n = int( input( "Enter a bit length n " ) )
-        global t
-        t = int (input( "Enter a confidence level t " ) )
-        global message_file
-        message_file = input("Enter the name of a file containing the message you wish to encrypt ")
+        return {'privateKey': privateKey, 'publicKey': publicKey}
 
         
-#encrypts a list of integers z using the public key K1
-def encrypt( z ):
-        #get p, g, h of K1
-        f = open( 'K1', 'r' )
-        p = int(f.readline())
-        g = int(f.readline())
-        h = int(f.readline())
-        f.close()
+#encrypts a string sPlaintext using the public key k
+def encrypt(key, sPlaintext):
+        z = encode(sPlaintext, key.iNumBits)
 
-        #encrypt
-        #cipher_pairs list will hold pairs (c, d) corresponding to each integer in z
+	#cipher_pairs list will hold pairs (c, d) corresponding to each integer in z
         cipher_pairs = []
         #i is an integer in z
         for i in z:
                 #pick random y from (0, p-1) inclusive
-                y = random.randint( 0, p )
+                y = random.randint( 0, key.p )
                 #c = g^y mod p
-                c = modexp( g, y, p )
+                c = modexp( key.g, y, key.p )
                 #d = ih^y mod p
-                d = (i*modexp( h, y, p)) % p
+                d = (i*modexp( key.h, y, key.p)) % key.p
                 #add the pair to the cipher pairs list
                 cipher_pairs.append( [c, d] )
 
-        #write the pairs to file 'Cipher'
-        f = open( 'Cipher', 'w' )
-        #i is a pair
-        for i in cipher_pairs:
-                f.write( str(i[0]) + ' ' + str(i[1]) + '\n' )
-        f.close()       
+        encryptedStr = ""
+        for pair in cipher_pairs:
+                encryptedStr += str(pair[0]) + ' ' + str(pair[1])
+	
+        return encryptedStr;
 
 #performs decryption on the cipher pairs found in Cipher using
 #prive key K2 and writes the decrypted values to file Plaintext
-def decrypt( ):
-        #get p, g, x of K2
-        f = open( 'K2', 'r' )
-        p = int(f.readline())
-        g = int(f.readline())
-        x = int(f.readline())
-        f.close()
-
+def decrypt(key, cipher):
         #decrpyts each pair and adds the decrypted integer to list of plaintext integers
         plaintext = []
-        f = open('Cipher', 'r')
-        pair = f.readline()
-        #continue while lines read are not empty strings (EOF)
-        while( not pair == '' ):
-                #split the pair on the space
-                pair = pair.split( ' ' )
+        
+        cipherArray = cipher.split()
+        if (not len(cipherArray) % 2 == 0):
+                return "Malformed Cipher Text"
+        for i in range(0, len(cipherArray), 2):
                 #c = first number in pair
-                c = int(pair[0])
+                c = int(cipherArray[i])
                 #d = second number in pair
-                d = int(pair[1])
+                d = int(cipherArray[i+1])
 
                 #s = c^x mod p
-                s = modexp( c, x, p )
+                s = modexp( c, key.x, key.p )
                 #plaintext integer = ds^-1 mod p
-                plain = (d*modexp( s, p-2, p)) % p
+                plain = (d*modexp( s, key.p-2, key.p)) % key.p
                 #add plain to list of plaintext integers
                 plaintext.append( plain )
-                #get next pair
-                pair = f.readline()
-                
-        f.close()
 
-        #write all plaintext integers to file Plaintext
-        f = open( 'Plaintext', 'w' )
-        for i in plaintext:
-                f.write( str(i) + "\n" )
-        f.close()
+        decryptedText = decode(plaintext, key.iNumBits)
 
-#demonstrates the program        
-def driver():
-        #gets values of n, t, message file from user
-        get_global_params()
-        print ("generating keys")
-        #gets keys and writes them to K1 and K2
-        generate_keys()
-        #encodes the message bytes of message file to larger integers
-        z = encode()
-        print ("encrypting")
-        #encrypt the encoded integers
-        encrypt( z )
-        print ("decrypting")
-        #decrypt the encrypted integers in Cipher
-        decrypt()
-        #decode the decrypted, encoded integers
-        decode()
-        print( 'done' )
+	#remove trailing null bytes
+        decryptedText = "".join([ch for ch in decryptedText if ch != '\x00'])
 
-#get_global_params()
-#z = encode()
-#f = open('encoded_text.txt', 'w')
-#for i in z:
-#        f.write( str(i) + "\n" )
-#f.close()
-#decode()
-
-driver()
-        
-
-
-
-
-
-
-
-
+        return decryptedText
 
