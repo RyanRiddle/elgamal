@@ -103,25 +103,7 @@ def gcd( a, b ):
         
 #computes base^exp mod modulus
 def modexp( base, exp, modulus ):
-        if exp == 0:
-                return 1
-
-        temp = exp
-        #if temp is negative, force round toward 0
-        if temp < 0:
-                temp = math.ceil( temp / 2 )
-        else:
-        #integer division
-                temp = temp // 2 
-        
-        z = modexp( base, temp, modulus )
-
-        #if exp is even
-        if exp % 2 == 0:
-                return z*z % modulus
-        #if exp is odd
-        else:
-                return base*z*z % modulus
+        return pow(base, exp, modulus)
 
 #solovay-strassen primality test.  tests if num is prime
 def SS( num, iConfidence ):
