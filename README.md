@@ -44,3 +44,5 @@ To decrypt the cipher text do
 	#returns the message passed to elgamal.encrypt()
 
 Compatibility: Python 3.4
+
+License: MIT
