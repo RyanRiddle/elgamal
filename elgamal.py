@@ -79,6 +79,7 @@
 
 import random
 import math
+import sys
 
 class PrivateKey(object):
 	def __init__(self, p=None, g=None, x=None, iNumBits=0):
@@ -353,6 +354,7 @@ def decrypt(key, cipher):
         return decryptedText
 
 def test():
+        assert (sys.version_info >= (3,4))
         keys = generate_keys()
         priv = keys['privateKey']
         pub = keys['publicKey']
@@ -361,3 +363,4 @@ def test():
         plain = decrypt(priv, cipher)
 
         return message == plain
+
