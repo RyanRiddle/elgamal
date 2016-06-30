@@ -43,6 +43,6 @@ To decrypt the cipher text do
 	plaintext = elgamal.decrypt(privateKey, cipher)
 	#returns the message passed to elgamal.encrypt()
 
-Compatibility: Python 3.4
+Compatibility: Python 3.4.  Does not work in python 2.7!
 
 License: MIT
