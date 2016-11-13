@@ -322,7 +322,7 @@ def encrypt(key, sPlaintext):
 		for pair in cipher_pairs:
 				encryptedStr += str(pair[0]) + ' ' + str(pair[1]) + ' '
 	
-		return encryptedStr;
+		return encryptedStr
 
 #performs decryption on the cipher pairs found in Cipher using
 #prive key K2 and writes the decrypted values to file Plaintext
