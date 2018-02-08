@@ -46,3 +46,5 @@ To decrypt the cipher text do
 Compatibility: Python 3.4.  Does not work in python 2.7!
 
 License: MIT
+
+Like this module?  Tell me what you like about it here https://goo.gl/forms/nA8gBcjPiwAoWzg32
