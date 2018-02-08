@@ -15,7 +15,7 @@
 #of keys (K1, K2) used for encryption and decryption.  K1 is the public key and contains
 #three integers (p, g, h).
 #       p is an n bit prime.  The probability that p is actually prime is 1-(2^-t)
-#       g is a primitive root mod p
+#       g is the square of a primitive root mod p
 #       h = g^x mod p; x is randomly chosen, 1 <= x < p
 #h is computed using fast modular exponentiation, implemented as modexp( base, exp, modulus )
 #K2 is the private key and contains three integers (p, g, x) that are described above.
@@ -97,8 +97,10 @@ class PublicKey(object):
 
 # computes the greatest common denominator of a and b.  assumes a > b
 def gcd( a, b ):
-		if b != 0:
-				return gcd( b, a % b )
+		while b != 0:
+			c = a % b
+			a = b
+			b = c
 		#a is returned if b == 0
 		return a
 
@@ -291,8 +293,9 @@ def generate_keys(iNumBits=256, iConfidence=32):
 		#x is random in (0, p-1) inclusive
 		#h = g ^ x mod p
 		p = find_prime(iNumBits, iConfidence)
-		g = find_primitive_root( p )
-		x = random.randint( 1, p )
+		g = find_primitive_root(p)
+		g = modexp( g, 2, p )
+		x = random.randint( 1, (p - 1) // 2 )
 		h = modexp( g, x, p )
 
 		publicKey = PublicKey(p, g, h, iNumBits)
